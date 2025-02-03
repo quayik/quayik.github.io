@@ -1,1 +1,46 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Blog</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.10/marked.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; }
+        h1 { text-align: center; }
+        .post { margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>My Blog</h1>
+    <div id="posts"></div>
+    
+    <script>
+        async function loadPosts() {
+            const postsContainer = document.getElementById("posts");
+            postsContainer.innerHTML = "Loading...";
+            try {
+                const response = await fetch("/posts/");
+                const text = await response.text();
+                const files = text.match(/href=\"(.*?)\"/g).map(href => href.replace(/href=\"|\"/g, ''));
+                
+                postsContainer.innerHTML = "";
+                for (let file of files) {
+                    if (file.endsWith(".md")) {
+                        let postResponse = await fetch(`/posts/${file}`);
+                        let markdown = await postResponse.text();
+                        let postElement = document.createElement("div");
+                        postElement.classList.add("post");
+                        postElement.innerHTML = `<h2>${file.replace(".md", "")}</h2>` + marked.parse(markdown);
+                        postsContainer.appendChild(postElement);
+                    }
+                }
+            } catch (error) {
+                postsContainer.innerHTML = "Error loading posts.";
+                console.error(error);
+            }
+        }
+        loadPosts();
+    </script>
+</body>
+</html>
