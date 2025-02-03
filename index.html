@@ -19,20 +19,25 @@
         async function loadPosts() {
             const postsContainer = document.getElementById("posts");
             postsContainer.innerHTML = "Loading...";
+            
+            // Define your posts here - replace with your actual post filenames
+            const posts = [
+                'test.md'
+                // Add more post filenames as needed
+            ];
+            
             try {
-                const response = await fetch("/posts/");
-                const text = await response.text();
-                const files = text.match(/href=\"(.*?)\"/g).map(href => href.replace(/href=\"|\"/g, ''));
-                
                 postsContainer.innerHTML = "";
-                for (let file of files) {
-                    if (file.endsWith(".md")) {
-                        let postResponse = await fetch(`/posts/${file}`);
+                for (let file of posts) {
+                    try {
+                        let postResponse = await fetch(`posts/${file}`);
                         let markdown = await postResponse.text();
                         let postElement = document.createElement("div");
                         postElement.classList.add("post");
                         postElement.innerHTML = `<h2>${file.replace(".md", "")}</h2>` + marked.parse(markdown);
                         postsContainer.appendChild(postElement);
+                    } catch (postError) {
+                        console.error(`Error loading post ${file}:`, postError);
                     }
                 }
             } catch (error) {
