@@ -5,19 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Blog</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.10/marked.min.js"></script>
+    <script type="module">
+        import blogPosts from './posts-config.js';
+        window.blogPosts = blogPosts;
+    </script>
     <style>
         body { font-family: Arial, sans-serif; max-width: 800px; margin: auto; padding: 20px; }
         h1 { text-align: center; }
         .post { margin-bottom: 20px; padding: 10px; border-bottom: 1px solid #ddd; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 10px 0; }
+        a { color: #0066cc; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        button { 
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e9ecef;
+        }
     </style>
 </head>
 <body>
     <h1>My Blog</h1>
-    <div id="posts"></div>
+    <div id="posts-list"></div>
+    <div id="post-content" style="display: none;"></div>
     
     <script>
+        async function loadPost(file) {
+            const postContent = document.getElementById("post-content");
+            const postsList = document.getElementById("posts-list");
+            
+            try {
+                postContent.innerHTML = "Loading...";
+                postContent.style.display = "block";
+                postsList.style.display = "none";
+                
+                let postResponse = await fetch(`posts/${file}`);
+                let markdown = await postResponse.text();
+                postContent.innerHTML = `
+                    <div class="post">
+                        <button onclick="showPostsList()" style="margin-bottom: 20px;">← Back to Posts</button>
+                        <h2>${file.replace(".md", "")}</h2>
+                        ${marked.parse(markdown)}
+                    </div>
+                `;
+            } catch (error) {
+                postContent.innerHTML = "Error loading post.";
+                console.error(error);
+            }
+        }
+
+        function showPostsList() {
+            document.getElementById("posts-list").style.display = "block";
+            document.getElementById("post-content").style.display = "none";
+        }
+
         async function loadPosts() {
-            const postsContainer = document.getElementById("posts");
+            const postsContainer = document.getElementById("posts-list");
             postsContainer.innerHTML = "Loading...";
             
             // Make sure marked is available
@@ -33,26 +81,18 @@
             // Initialize marked
             marked.use({ mangle: false, headerIds: false });
             
-            // Define your posts here - replace with your actual post filenames
-            const posts = [
-                'test.md'
-                // Add more post filenames as needed
-            ];
-            
             try {
-                postsContainer.innerHTML = "";
-                for (let file of posts) {
-                    try {
-                        let postResponse = await fetch(`posts/${file}`);
-                        let markdown = await postResponse.text();
-                        let postElement = document.createElement("div");
-                        postElement.classList.add("post");
-                        postElement.innerHTML = `<h2>${file.replace(".md", "")}</h2>` + marked.parse(markdown);
-                        postsContainer.appendChild(postElement);
-                    } catch (postError) {
-                        console.error(`Error loading post ${file}:`, postError);
-                    }
+                postsContainer.innerHTML = "<ul>";
+                for (let file of window.blogPosts.posts) {
+                    postsContainer.innerHTML += `
+                        <li>
+                            <a href="#" onclick="loadPost('${file}'); return false;">
+                                ${file.replace(".md", "")}
+                            </a>
+                        </li>
+                    `;
                 }
+                postsContainer.innerHTML += "</ul>";
             } catch (error) {
                 postsContainer.innerHTML = "Error loading posts.";
                 console.error(error);
