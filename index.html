@@ -30,7 +30,7 @@
     </style>
 </head>
 <body>
-    <h1>My Blog</h1>
+    <h1>Damir's Blog</h1>
     <div id="posts-list"></div>
     <div id="post-content" style="display: none;"></div>
     
@@ -82,6 +82,13 @@
             marked.use({ mangle: false, headerIds: false });
             
             try {
+                // Wait for blogPosts to be available
+                if (!window.blogPosts) {
+                    console.error("Blog posts configuration not loaded");
+                    postsContainer.innerHTML = "Error: Configuration not loaded.";
+                    return;
+                }
+
                 postsContainer.innerHTML = "<ul>";
                 for (let file of window.blogPosts.posts) {
                     postsContainer.innerHTML += `
@@ -98,7 +105,11 @@
                 console.error(error);
             }
         }
-        loadPosts();
+
+        // Wait for the module script to load before initializing
+        window.addEventListener('load', () => {
+            setTimeout(loadPosts, 100); // Small delay to ensure module is loaded
+        });
     </script>
 </body>
 </html>
