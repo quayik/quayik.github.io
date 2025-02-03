@@ -20,6 +20,19 @@
             const postsContainer = document.getElementById("posts");
             postsContainer.innerHTML = "Loading...";
             
+            // Make sure marked is available
+            if (typeof marked === 'undefined') {
+                await new Promise((resolve) => {
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+            }
+            
+            // Initialize marked
+            marked.use({ mangle: false, headerIds: false });
+            
             // Define your posts here - replace with your actual post filenames
             const posts = [
                 'test.md'
